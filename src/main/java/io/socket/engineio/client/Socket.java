@@ -128,14 +128,13 @@ public class Socket extends Emitter {
 
     private ReadyState readyState;
     private ScheduledExecutorService heartbeatScheduler;
+    private final Listener onHeartbeatAsListener = new Listener() {
+        @Override
+        public void call(Object... args) {
+            Socket.this.onHeartbeat(args.length > 0 ? (Long)args[0]: 0);
+        }
+    };
 
-    public static void setDefaultSSLContext(SSLContext sslContext) {
-        defaultSSLContext = sslContext;
-    }
-
-    public static void setDefaultHostnameVerifier(HostnameVerifier hostnameVerifier) {
-        defaultHostnameVerifier = hostnameVerifier;
-    }
 
     public Socket() {
         this(new Options());
@@ -204,6 +203,14 @@ public class Socket extends Emitter {
         this.policyPort = opts.policyPort != 0 ? opts.policyPort : 843;
         this.rememberUpgrade = opts.rememberUpgrade;
         this.hostnameVerifier = opts.hostnameVerifier != null ? opts.hostnameVerifier : defaultHostnameVerifier;
+    }
+
+    public static void setDefaultSSLContext(SSLContext sslContext) {
+        defaultSSLContext = sslContext;
+    }
+
+    public static void setDefaultHostnameVerifier(HostnameVerifier hostnameVerifier) {
+        defaultHostnameVerifier = hostnameVerifier;
     }
 
     /**
@@ -517,13 +524,6 @@ public class Socket extends Emitter {
         this.off(EVENT_HEARTBEAT, this.onHeartbeatAsListener);
         this.on(EVENT_HEARTBEAT, this.onHeartbeatAsListener);
     }
-
-    private final Listener onHeartbeatAsListener = new Listener() {
-        @Override
-        public void call(Object... args) {
-            Socket.this.onHeartbeat(args.length > 0 ? (Long)args[0]: 0);
-        }
-    };
 
     private void onHeartbeat(long timeout) {
         if (this.pingTimeoutTimer != null) {
